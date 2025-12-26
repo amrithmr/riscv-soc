@@ -1,0 +1,19 @@
+# Verilator build output
+obj_dir/
+*.vcd
+
+# Firmware outputs
+*.elf
+*.hex
+*.bin
+*.map
+
+# Python cache
+__pycache__/
+
+# macOS junk
+.DS_Store
+
+# Editors
+.vscode/
+

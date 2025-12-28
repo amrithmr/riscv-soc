@@ -1,8 +1,10 @@
 // Module declaration called sram
 module sram #(
+        
+
     parameter ADDR_WIDTH = 14  // 2^14 = 16384 words, each word is 4 bytes,
                                // 16384 × 4 = 65536 bytes = 64 KB
-
+)(
     input logic clk, //clk where all memory behavior is sychnronized to this signal 
                     //( in hardware, flip-flops triggered in rising edge)
     input logic valid, // indicated CPU is requesting a memory operation when valid is high
@@ -14,10 +16,19 @@ module sram #(
     output logic [31:0] rdata, // Data returned to CPU on a read, samples when ready=1
     output logic        ready //Handshake response back to CPU , ready=1 means memory access is complete
 );
+
+
 //Internal memory array declaration
     logic [31:0] mem [0:(1<<ADDR_WIDTH)-1];//Creates an array of registers, each entry is 32 bits wide
     //Address range is from 0 to (2^ADDR_WIDTH - 1) with ADDR_WIDTH = 14
     //This is actual RAM storage, in FPGA this maps to BRAM
+
+
+initial begin
+        $readmemh("software/loop.hex", mem);
+    end
+
+
 
 //Address translation: convert byte address to word address
     wire [ADDR_WIDTH-1:0] word_addr = addr[ADDR_WIDTH+1:2]; // CPU gives byte address, memory array is word-indexed

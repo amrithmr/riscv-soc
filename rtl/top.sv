@@ -26,12 +26,11 @@ module top (
         .mem_wdata   (mem_wdata),//CPU provides write data
         .mem_wstrb   (mem_wstrb),//CPU provides byte-enable signals
         .mem_rdata   (mem_rdata),//Memory returns read data
-
-        .irq         (32'b0),//PicoRV32 supports 32 interrupt lines, we tie them all to 0. This means no interrupts yet ( keeps CPU in pure polling mode)
-        .eoi         ()//end of interrupt signal, not used here, left unconnected
+        .irq         (32'b0)//PicoRV32 supports 32 interrupt lines, we tie them all to 0. This means no interrupts yet ( keeps CPU in pure polling mode)
+        //.eoi         ()//end of interrupt signal, not used here, left unconnected
         //Debug tracing outputs, useful for advanced debugging 
-        .trace_valid (),
-        .trace_data  ()
+       // .trace_valid (),
+       // .trace_data  ()
     );
 //SRAM instantiation, this creates a block of memory that the CPU can use for instructions and data
     sram ram(

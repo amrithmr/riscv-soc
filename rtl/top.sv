@@ -6,21 +6,25 @@ module top (
     input logic reset //synchronous reset ( active high)
     //these are ohysical wires, in simulation they are driven by testbench, in FPGA they are connected to pins or PLLs
 );
-    logic        mem_valid; //asserted by CPU - "i want to access memory" ( in hardware its single wire from CPU to memory system)
-    logic        mem_ready; //Asserted by memory, "memory access is complete" ( in hardware its single wire from memory system to CPU)
-    logic [31:0] mem_addr;//32-bit b yte address, used for instruction fetch and data load/store ( in hardware its a 32-bit bus from CPU to memory system)
-    logic [31:0] mem_wdata;//data written from CPU to memory
-    logic [3:0]  mem_wstrb;//byte-enable signals for write operations ( in hardware its a 4-bit bus from CPU to memory system)
-    logic [31:0] mem_rdata;//Data returned from memory to CPU, used for instruction fetch and data load ( in hardware its a 32-bit bus from memory system to CPU)
+    wire        mem_valid;
+    wire        mem_instr; //asserted by CPU - "i want to access memory" ( in hardware its single wire from CPU to memory system)
+    wire        mem_ready; //Asserted by memory, "memory access is complete" ( in hardware its single wire from memory system to CPU)
+    wire [31:0] mem_addr;//32-bit b yte address, used for instruction fetch and data load/store ( in hardware its a 32-bit bus from CPU to memory system)
+    wire [31:0] mem_wdata;//data written from CPU to memory
+    wire [3:0]  mem_wstrb;//byte-enable signals for write operations ( in hardware its a 4-bit bus from CPU to memory system)
+    wire [31:0] mem_rdata;//Data returned from memory to CPU, used for instruction fetch and data load ( in hardware its a 32-bit bus from memory system to CPU)
     
     //Instantiate the PicoRV32 module, creates the actual hardware for the CPU
     //Everyhting inside this instance is a real processor
-    picorv32 cpu (
+    picorv32 #(
+    .PROGADDR_RESET(32'h00000000)
+    )cpu (
         .clk         (clk), //Connects SoC clk to CPU clk input ( all CPU logic runs on this clock)
-        .resetn      (!reset), // reset connection, active low in CPU, active high in SoC ( this inversion is very common in integration work)
+        .resetn      (reset), // reset connection, active low in CPU, active high in SoC ( this inversion is very common in integration work)
       
         //Memory interface connections for the CPU memory system
-        .mem_valid   (mem_valid),//CPU drives this, requests memory access
+        .mem_valid   (mem_valid),
+        .mem_instr   (mem_instr),//CPU drives this, requests memory access
         .mem_ready   (mem_ready),//memory drives this, tells CPU when access completes
         .mem_addr    (mem_addr),//CPU provides the address
         .mem_wdata   (mem_wdata),//CPU provides write data
@@ -32,8 +36,17 @@ module top (
        // .trace_valid (),
        // .trace_data  ()
     );
+
+
+//wire [31:0] cpu_pc /* verilator public */ = cpu.reg_pc;
+//wire        cpu_mem_valid /* verilator public */= cpu.mem_valid;
+//wire [31:0] cpu_mem_addr /* verilator public */ = cpu.mem_addr;
+//wire        cpu_mem_ready /* verilator public */ = cpu.mem_ready;
+
 //SRAM instantiation, this creates a block of memory that the CPU can use for instructions and data
-    sram ram(
+    sram #(
+         .MEM_INIT_HEX("software/ram_test.hex")  //specify the hex file to preload memory
+    )ram(
         .clk   (clk), //same clock as CPU
         .valid (mem_valid),//SRAM sees when CPU wants to access memory
         .addr  (mem_addr),//same address CPU generated 
@@ -42,6 +55,7 @@ module top (
         .rdata (mem_rdata),//SRAM returns read value, goes directly to CPU
         .ready (mem_ready)//SRAM tells CPU access is complete
     );
+
 endmodule
 
 //This is a real computer, capable of running software compiled for RISC-V
